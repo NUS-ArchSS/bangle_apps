@@ -32,7 +32,7 @@ function createCode() {
   var hrmRaw,hrmPulse,bthrmPulse
 
   function gotAll(){
-    return gotBTHRM && gotHRM && gotHRMraw && gotAcc;
+    return gotHRM && gotAcc;
   }
 
   let bthrmSettings = (require("Storage").readJSON("bthrm.json",1) || {});
@@ -58,8 +58,7 @@ function createCode() {
     write = function(str){Bluetooth.print("DATA: " + str);events++;};
   }
 
-  write("Time,Acc_x,Acc_y,Acc_z,HRM_b,HRM_c,HRM_r,HRM_f,PPG_r,PPG_o,BTHRM\n");
-
+  write("Time,Acc_x,Acc_y,Acc_z,HRM_b,HRM_c\n");
 
   function writeAcc(e){
     gotAcc = true;
@@ -73,14 +72,10 @@ function createCode() {
     gotAcc = true;
     acc = e;
     if (!gotAll()) return;
-    write(Date.now()+","+e.x+","+e.y+","+e.z+",,,,,,,,\n");
-  }
-
-  function writeBTHRM(e){
-    gotBTHRM = true;
-    bthrmPulse = e.bpm;
-    if (!gotAll()) return;
-    write(Date.now()+",,,,,,,,,,"+e.bpm+"\n");
+    var x = Math.round(e.x*100);
+    var y = Math.round(e.y*100);
+    var z = Math.round(e.z*100);
+    write(Date.now()+","+x+","+y+","+z+",,,\n");
   }
 
   function writeHRM(e){
@@ -89,16 +84,9 @@ function createCode() {
     if (!gotAll()) return;
     while(accData.length > 0){
       var c = accData.shift();
-      if (c) write(c.date+","+c.x+","+c.y+","+c.z+",,,,,,,,\n");
+      if (c) write(c.date+","+c.x+","+c.y+","+c.z+",,,\n");
     }
-    write(Date.now()+",,,,"+e.bpm+","+e.confidence+",,,,\n");
-  }
-
-  function writeHRMraw(e){
-    gotHRMraw = true;
-    hrmRaw = e.raw;
-    if (!gotAll()) return;
-    write(Date.now()+",,,,,,"+e.raw+","+e.filt+","+e.vcPPG+","+e.vcPPGoffs+",\n");
+    write(Date.now()+",,,,"+e.bpm+","+e.confidence+"\n");
   }
 
   if(maxSize){
@@ -106,13 +94,11 @@ function createCode() {
   } else {
     Bangle.on("accel", writeAccDirect);
   }
-  Bangle.on("HRM-raw", writeHRMraw);
   if (bthrmSettings.replace){
     Bangle.origOn("HRM", writeHRM);
   } else {
     Bangle.on("HRM", writeHRM);
   }
-  Bangle.on("BTHRM", writeBTHRM);
 
   g.clear();
 
@@ -136,9 +122,7 @@ function createCode() {
   function updateStatus(){
     let h = 1;
     drawStatus(gotAcc, h++);
-    drawStatus(gotBTHRM, h++, bthrmPulse); bthrmPulse = null;
     drawStatus(gotHRM, h++, hrmPulse); hrmPulse = null;
-    drawStatus(gotHRMraw, h++, hrmRaw); hrmRaw = null;
     drawStatus(events>0, h++, Math.max(events,0));
     if (method == 2){
       let free = require('Storage').getFree();
@@ -154,9 +138,7 @@ function createCode() {
 
   let h = 1;
   drawStatusText("Acc", h++);
-  drawStatusText("BTHRM", h++);
   drawStatusText("HRM", h++);
-  drawStatusText("HRM_r", h++);
   drawStatusText("Events", h++);
   if (method == 2) drawStatusText("Storage", h++);
   updateStatus();
@@ -298,7 +280,6 @@ function onLine(line) {
       "Captured events: " + lineCount;
 
     var dataArray = line.split(",");
-    console.log("dataArray: " + dataArray);
     renderBar(dataArray);
     renderChart(dataArray);
   }

@@ -10,9 +10,7 @@ Modified from:
 
 Demo:
 
-![2023-03-04-235615_2560x1440_scrot](https://p.ipic.vip/4wbus8.jpg)
-
-
+![Xnip2023-03-05_16-05-10](https://p.ipic.vip/e5kjlf.jpg)
 
 Credit:
 
