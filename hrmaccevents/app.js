@@ -354,7 +354,7 @@ var chart = new CanvasJS.Chart("chartContainer", {
 });
 
 chart.render();
-var dataLength = 30; // number of dataPoints visible at any point
+var dataLength = 20; // number of dataPoints visible at any point
 
 var updateChart = function (hr) {
   if (dps.length <= dataLength) {
