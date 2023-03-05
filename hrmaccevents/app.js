@@ -296,5 +296,99 @@ function onLine(line) {
     lineCount++;
     document.getElementById("result").innerText =
       "Captured events: " + lineCount;
+
+    var dataArray = line.split(",");
+    console.log("dataArray: " + dataArray);
+    renderBar(dataArray);
+    renderChart(dataArray);
+  }
+
+  // When we get a line of data, check it and if it's
+  // from the accelerometer, update it
+
+  function renderBar(data) {
+    // we have an accelerometer reading
+    if (data[1] && data[2] && data) {
+      var accel = {
+        x: parseInt(data[1]),
+        y: parseInt(data[2]),
+        z: parseInt(data[3]),
+      };
+      // Update bar positions
+      setBarPos("barX", accel.x);
+      setBarPos("barY", accel.y);
+      setBarPos("barZ", accel.z);
+    }
   }
 }
+
+// When we get a line of data, check it and if it's
+// from the heart rate monitor, update it
+function renderChart(data) {
+  // we have an HR monitor reading
+  if (data[4]) {
+    var hr_data = {
+      hr: parseInt(data[4]),
+      conf: parseInt(data[5]),
+    };
+    updateChart(hr_data.hr);
+  }
+}
+
+// Set the position of each bar
+function setBarPos(id, d) {
+  var s = document.getElementById(id).style;
+  if (d > 150) d = 150;
+  if (d < -150) d = -150;
+  if (d >= 0) {
+    s.left = "150px";
+    s.width = d + "px";
+  } else {
+    // less than 0
+    s.left = 150 + d + "px";
+    s.width = -d + "px";
+  }
+}
+
+//Chart Setup
+var dps = []; // dataPoints
+var chart = new CanvasJS.Chart("chartContainer", {
+  title: {
+    text: "Bangle.js HeartRate Monitoring Over Time",
+  },
+  axisY: {
+    title: "Heart Rate",
+  },
+  axisX: {
+    title: "Time",
+    valueFormatString: "HH:mm:ss",
+  },
+  data: [
+    {
+      type: "spline",
+      indexLabel: "{y}",
+      dataPoints: dps,
+    },
+  ],
+});
+
+chart.render();
+var dataLength = 30; // number of dataPoints visible at any point
+
+var updateChart = function (hr) {
+  if (dps.length <= dataLength) {
+    labelVal = new Date().toISOString();
+    xVal = new Date();
+    yVal = hr;
+    dps.push({
+      x: xVal,
+      y: yVal,
+    });
+  }
+
+  if (dps.length > dataLength) {
+    dps.shift();
+  }
+
+  chart.render();
+};
